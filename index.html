@@ -1,0 +1,85 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preserver Trans LLC | Management System</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">P</div>
+      <div>
+        <strong>PRESERVER</strong>
+        <small>TRANS LLC</small>
+      </div>
+    </div>
+
+    <div class="workspace-label">WORKSPACE</div>
+    <nav id="nav">
+      <button class="nav-item active" data-page="dashboard">▦ <span>Dashboard</span></button>
+      <button class="nav-item" data-page="dispatch">▤ <span>Dispatch Board</span></button>
+      <button class="nav-item" data-page="loads">⇄ <span>Loads</span></button>
+      <button class="nav-item" data-page="drivers">♙ <span>Drivers</span></button>
+      <button class="nav-item" data-page="trucks">▣ <span>Trucks</span></button>
+      <button class="nav-item" data-page="accounting">＄ <span>Accounting</span></button>
+      <button class="nav-item" data-page="reports">▥ <span>Reports</span></button>
+      <div class="workspace-label admin-label">MANAGEMENT</div>
+      <button class="nav-item" data-page="admin">⚙ <span>Admin & Settings</span></button>
+    </nav>
+
+    <div class="sidebar-foot">
+      <span class="online-dot"></span> Local workspace
+      <small>Preserver Trans LLC</small>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <button class="mobile-menu" id="menuBtn">☰</button>
+      <div>
+        <div class="eyebrow">PRESERVER TRANS LLC</div>
+        <div class="top-title" id="topTitle">Dashboard</div>
+      </div>
+      <div class="top-actions">
+        <span class="date-chip" id="today"></span>
+        <div class="avatar">SA</div>
+        <div class="user-meta">
+          <b>Saim Ali</b>
+          <small>Administrator</small>
+        </div>
+      </div>
+    </header>
+
+    <section class="content">
+      <div id="page"></div>
+    </section>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<dialog id="modal">
+  <form id="modalForm">
+    <div class="modal-head">
+      <div>
+        <small class="eyebrow">PRESERVER TRANS LLC</small>
+        <h2 id="modalTitle">Add Item</h2>
+      </div>
+      <button type="button" class="icon-btn" id="closeModal">✕</button>
+    </div>
+    <div id="modalFields" class="modal-fields"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-light" id="cancelModal">Cancel</button>
+      <button type="submit" class="btn btn-primary">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="app.js"></script>
+</body>
+</html>
