@@ -599,12 +599,12 @@ $("page").addEventListener("click",e => {
   }
 
   if (action === "edit") {
-    const type = currentPage === "dispatch" ? "loads" : currentPage;
+    const type = currentPage === "dispatch" ? "loads" :              currentPage === "accounting" ? "expenses" : currentPage;
     openForm(type,id);
   }
 
   if (action === "delete") {
-    const type = currentPage === "dispatch" ? "loads" : currentPage;
+    const type = currentPage === "dispatch" ? "loads" :              currentPage === "accounting" ? "expenses" : currentPage;
     if (!confirm("Are you sure you want to delete this record?")) return;
     db[type] = db[type].filter(x => x.id !== id);
     saveDB();
