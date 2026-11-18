@@ -3,83 +3,1039 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Preserver Trans LLC | Management System</title>
-<link rel="stylesheet" href="styles.css">
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+:root{
+--navy:#101827;--navy2:#1b2a40;--gold:#d9aa45;
+--bg:#f3f5f9;--text:#202b3c;--muted:#8490a1;
+--line:#e7eaf0;--green:#16875b;--red:#c94c4c
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text)}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.app{display:flex;min-height:100vh}
+.sidebar{width:245px;background:var(--navy);color:white;padding:22px 15px;display:flex;flex-direction:column;flex-shrink:0}
+.brand{display:flex;gap:11px;align-items:center;padding:4px 9px 30px}
+.mark{height:42px;width:42px;border-radius:11px;background:var(--gold);color:var(--navy);display:grid;place-items:center;font-size:25px;font-weight:900}
+.brand b{letter-spacing:2px}
+.brand small{display:block;color:var(--gold);letter-spacing:3px;margin-top:4px}
+.section-label{font-size:10px;letter-spacing:2px;color:#8492a5;padding:0 12px 12px;font-weight:bold}
+nav{display:grid;gap:6px}
+.nav{border:0;border-radius:8px;background:transparent;color:#c1cbd8;text-align:left;padding:13px;display:flex;gap:12px;align-items:center}
+.nav:hover,.nav.active{background:var(--navy2);color:white}
+.nav.active{border-left:3px solid var(--gold)}
+.foot{margin-top:auto;border-top:1px solid #304056;padding:17px 10px 0;color:#c1cbd8;font-size:12px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#31c58a;margin-right:7px}
+main{flex:1;min-width:0}
+.top{height:78px;background:white;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 30px}
+.eyebrow{font-size:10px;color:var(--gold);letter-spacing:2px;font-weight:bold}
+.top h2{font-size:20px;margin:5px 0 0}
+.who{display:flex;align-items:center;gap:10px;font-size:12px}
+.avatar{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--navy);color:var(--gold);font-weight:bold}
+.menu{display:none}
+.content{padding:27px 30px;max-width:1600px;margin:auto}
+.heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:22px}
+.heading h1{font-size:24px;margin:0 0 6px}
+.heading p{font-size:13px;color:var(--muted);margin:0}
+.btn{border:0;border-radius:8px;padding:10px 15px;font-weight:bold;font-size:12px}
+.primary{background:var(--gold);color:#1b2430}
+.dark{background:var(--navy);color:white}
+.light{background:#eef1f5;color:#435064}
+.danger{background:#fff0f0;color:var(--red)}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:20px}
+.stat,.panel{background:white;border:1px solid var(--line);border-radius:11px;padding:19px;box-shadow:0 6px 22px #17263b08}
+.stat label{font-size:11px;color:var(--muted);font-weight:bold}
+.stat strong{display:block;font-size:26px;margin-top:12px}
+.stat small{font-size:11px;color:var(--muted)}
+.panel{margin-bottom:18px}
+.panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:15px}
+.panel h3{font-size:15px;margin:0}
+.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;white-space:nowrap}
+th{background:#f7f8fa;text-align:left;font-size:10px;color:#718094;letter-spacing:.6px;padding:13px;text-transform:uppercase}
+td{border-bottom:1px solid #edf0f4;padding:13px;font-size:12px}
+tr:last-child td{border:0}
+.empty{text-align:center;color:var(--muted);padding:30px}
+.badge{display:inline-block;border-radius:20px;padding:5px 9px;font-size:10px;font-weight:bold;background:#eef1f5}
+.Delivered{background:#e6f6ee;color:var(--green)}
+.Dispatched,.In-Transit,.Picked-Up{background:#eaf1ff;color:#3865bb}
+.Yard{background:#fff4df;color:#a87922}
+.Cancelled{background:#fff0f0;color:var(--red)}
+.toolbar{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}
+.search{border:1px solid var(--line);border-radius:7px;padding:10px 12px;min-width:220px;font-size:12px}
+#map{height:520px;border-radius:10px;z-index:1}
+.map-note{font-size:12px;color:var(--muted);line-height:1.6}
+.fieldgrid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field.full{grid-column:1/-1}
+.field label{font-size:11px;font-weight:bold;color:#657184}
+.field input,.field select,.field textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:7px;background:white;font-size:12px}
+.field textarea{min-height:70px}
+dialog{border:0;border-radius:13px;width:min(650px,94%);padding:24px;max-height:90vh;overflow:auto;box-shadow:0 20px 70px #0004}
+dialog::backdrop{background:#10182799}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.modal-head h2{font-size:20px;margin:5px 0}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;padding-top:15px;border-top:1px solid var(--line)}
+.toast{position:fixed;right:20px;bottom:20px;background:var(--navy);color:white;padding:13px 18px;border-radius:8px;font-size:12px;opacity:0;transition:.2s;z-index:9999}
+.toast.show{opacity:1}
+.notice{background:#fff8e8;border:1px solid #f1dfb7;color:#76561c;padding:13px;border-radius:8px;font-size:12px;line-height:1.6;margin-bottom:15px}
+@media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:680px){
+.sidebar{position:fixed;z-index:100;top:0;bottom:0;left:-260px;transition:.2s}
+.sidebar.open{left:0}
+.menu{display:block;border:0;background:none;font-size:22px;margin-right:12px}
+.top{padding:0 14px}
+.who span:last-child{display:none}
+.content{padding:20px 13px}
+.heading{align-items:flex-start;flex-direction:column}
+.stats{gap:9px}
+.stat{padding:13px}
+.stat strong{font-size:21px}
+#map{height:430px}
+.fieldgrid{grid-template-columns:1fr}
+.field.full{grid-column:auto}
+}
+</style>
 </head>
+
 <body>
-
-<div class="app-shell">
-  <aside class="sidebar" id="sidebar">
-    <div class="brand">
-      <div class="brand-mark">P</div>
-      <div>
-        <strong>PRESERVER</strong>
-        <small>TRANS LLC</small>
-      </div>
-    </div>
-
-    <div class="workspace-label">WORKSPACE</div>
-    <nav id="nav">
-      <button class="nav-item active" data-page="dashboard">▦ <span>Dashboard</span></button>
-      <button class="nav-item" data-page="dispatch">▤ <span>Dispatch Board</span></button>
-      <button class="nav-item" data-page="loads">⇄ <span>Loads</span></button>
-      <button class="nav-item" data-page="drivers">♙ <span>Drivers</span></button>
-      <button class="nav-item" data-page="trucks">▣ <span>Trucks</span></button>
-      <button class="nav-item" data-page="accounting">＄ <span>Accounting</span></button>
-      <button class="nav-item" data-page="reports">▥ <span>Reports</span></button>
-      <div class="workspace-label admin-label">MANAGEMENT</div>
-      <button class="nav-item" data-page="admin">⚙ <span>Admin & Settings</span></button>
-    </nav>
-
-    <div class="sidebar-foot">
-      <span class="online-dot"></span> Local workspace
-      <small>Preserver Trans LLC</small>
-    </div>
-  </aside>
-
-  <main class="main">
-    <header class="topbar">
-      <button class="mobile-menu" id="menuBtn">☰</button>
-      <div>
-        <div class="eyebrow">PRESERVER TRANS LLC</div>
-        <div class="top-title" id="topTitle">Dashboard</div>
-      </div>
-      <div class="top-actions">
-        <span class="date-chip" id="today"></span>
-        <div class="avatar">SA</div>
-        <div class="user-meta">
-          <b>Saim Ali</b>
-          <small>Administrator</small>
-        </div>
-      </div>
-    </header>
-
-    <section class="content">
-      <div id="page"></div>
-    </section>
-  </main>
+<div class="app">
+<aside class="sidebar" id="sidebar">
+<div class="brand">
+<div class="mark">P</div>
+<div><b>PRESERVER</b><small>TRANS LLC</small></div>
 </div>
+
+<div class="section-label">WORKSPACE</div>
+<nav id="nav">
+<button class="nav active" data-page="dashboard">▦ Dashboard</button>
+<button class="nav" data-page="map">🌎 Live World Map</button>
+<button class="nav" data-page="dispatch">▤ Dispatch Board</button>
+<button class="nav" data-page="loads">⇄ Loads</button>
+<button class="nav" data-page="drivers">♙ Drivers</button>
+<button class="nav" data-page="trucks">▣ Trucks</button>
+<button class="nav" data-page="accounting">＄ Accounting</button>
+<button class="nav" data-page="reports">▥ Reports</button>
+<button class="nav" data-page="admin">⚙ Admin & Settings</button>
+</nav>
+
+<div class="foot"><span class="dot"></span> Workspace ready<br><small>Preserver Trans LLC</small></div>
+</aside>
+
+<main>
+<header class="top">
+<button class="menu" id="menuBtn">☰</button>
+<div><div class="eyebrow">PRESERVER TRANS LLC</div><h2 id="pageTitle">Dashboard</h2></div>
+<div class="who"><div class="avatar">SA</div><span><b>Saim Ali</b><br><small>Administrator</small></span></div>
+</header>
+<section class="content" id="page"></section>
+</main>
+</div>
+
+<dialog id="modal">
+<form id="recordForm">
+<div class="modal-head">
+<div><div class="eyebrow">PRESERVER TRANS LLC</div><h2 id="modalTitle">Add record</h2></div>
+<button type="button" class="btn light" id="xModal">✕</button>
+</div>
+<div class="fieldgrid" id="fields"></div>
+<div class="modal-actions">
+<button type="button" class="btn light" id="cancelModal">Cancel</button>
+<button class="btn primary">Save Record</button>
+</div>
+</form>
+</dialog>
 
 <div class="toast" id="toast"></div>
 
-<dialog id="modal">
-  <form id="modalForm">
-    <div class="modal-head">
-      <div>
-        <small class="eyebrow">PRESERVER TRANS LLC</small>
-        <h2 id="modalTitle">Add Item</h2>
-      </div>
-      <button type="button" class="icon-btn" id="closeModal">✕</button>
-    </div>
-    <div id="modalFields" class="modal-fields"></div>
-    <div class="modal-actions">
-      <button type="button" class="btn btn-light" id="cancelModal">Cancel</button>
-      <button type="submit" class="btn btn-primary">Save</button>
-    </div>
-  </form>
-</dialog>
+<script>
+/* ==================================================
+   SUPABASE CONNECTION
+   Add your existing project URL and anon/public key.
+   Never paste a service_role key into this file.
+================================================== */
 
-<script src="app.js"></script>
+const SUPABASE_URL = "PASTE_YOUR_EXISTING_SUPABASE_PROJECT_URL";
+const SUPABASE_ANON_KEY = "PASTE_YOUR_EXISTING_SUPABASE_ANON_KEY";
+
+const TRACKING_TABLE = "truck_locations";
+
+const supabaseReady =
+  SUPABASE_URL.startsWith("https://") &&
+  !SUPABASE_URL.includes("PASTE_") &&
+  SUPABASE_ANON_KEY.length > 20 &&
+  !SUPABASE_ANON_KEY.includes("PASTE_") &&
+  window.supabase;
+
+const sb = supabaseReady
+  ? window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY)
+  : null;
+
+/* LOCAL MANAGEMENT DATA */
+
+const KEY = "preserver_trans_single_file_v1";
+
+const defaults = {
+  loads:[],
+  drivers:[],
+  trucks:[],
+  expenses:[],
+  settings:{
+    company:"Preserver Trans LLC",
+    dispatcher:"Saim Ali",
+    phone:"5305656348"
+  }
+};
+
+let db;
+try {
+  db={...defaults,...JSON.parse(localStorage.getItem(KEY)||"{}")};
+} catch {
+  db=JSON.parse(JSON.stringify(defaults));
+}
+
+["loads","drivers","trucks","expenses"].forEach(k=>db[k] ||= []);
+db.settings ||= {...defaults.settings};
+
+let pageName="dashboard";
+let editInfo=null;
+let map=null;
+let mapMarkers={};
+let searchText="";
+
+const $=id=>document.getElementById(id);
+
+const uid=()=>"PT-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,7);
+
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({
+"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+}[c]));
+
+const cash=v=>"$"+Number(v||0).toLocaleString("en-US",{
+minimumFractionDigits:2,
+maximumFractionDigits:2
+});
+
+const today=()=>new Date().toISOString().slice(0,10);
+
+function save(){
+ localStorage.setItem(KEY,JSON.stringify(db));
+}
+
+function toast(s){
+ $("toast").textContent=s;
+ $("toast").classList.add("show");
+ setTimeout(()=>$("toast").classList.remove("show"),2600);
+}
+
+function title(s,sub,btn=""){
+ return `<div class="heading"><div><h1>${s}</h1><p>${sub}</p></div>${btn}</div>`;
+}
+
+function addBtn(label){
+ return `<button class="btn primary" data-action="add">${label}</button>`;
+}
+
+function panel(name,body){
+ return `<div class="panel"><div class="panel-head"><h3>${name}</h3></div>${body}</div>`;
+}
+
+function badge(s){
+ let c=String(s||"Available").replace(/\s+/g,"-");
+ return `<span class="badge ${esc(c)}">${esc(s||"Available")}</span>`;
+}
+
+function table(headers,rows){
+ return `<div class="table-wrap"><table>
+ <thead><tr>${headers.map(x=>`<th>${x}</th>`).join("")}</tr></thead>
+ <tbody>${rows.length?rows.join(""):
+ `<tr><td colspan="${headers.length}" class="empty">No records yet.</td></tr>`}
+ </tbody></table></div>`;
+}
+
+function stat(a,b,c){
+ return `<div class="stat"><label>${a}</label><strong>${b}</strong><small>${c}</small></div>`;
+}
+
+function search(){
+ return `<input class="search" id="search" placeholder="Search..." value="${esc(searchText)}">`;
+}
+
+function filtered(arr,keys){
+ if(!searchText)return arr;
+ let q=searchText.toLowerCase();
+ return arr.filter(x=>keys.some(k=>String(x[k]||"").toLowerCase().includes(q)));
+}
+
+/* FORMS */
+
+const schemas={
+loads:[
+["loadNo","Load Number","text",1],
+["brokerLoadNo","Broker Load Number","text"],
+["company","Broker / Customer","text"],
+["pickup","Pickup Location","text",1],
+["delivery","Delivery Location","text",1],
+["pickupDate","Pickup Date","date"],
+["deliveryDate","Delivery Date","date"],
+["driverName","Driver Name","selectDrivers"],
+["driverPhone","Driver Phone","tel"],
+["truckNo","Truck Number","selectTrucks"],
+["trailerNo","Trailer Number","text"],
+["rate","Rate ($)","number"],
+["status","Status","status"],
+["appointment","Pickup Appointment","text"],
+["trackingToken","Tracking Token","text"],
+["notes","Notes","textarea"]
+],
+drivers:[
+["name","Driver Name","text",1],
+["phone","Phone with country code","tel",1],
+["truckNo","Truck Number","text"],
+["license","License Number","text"],
+["status","Status","driverStatus"]
+],
+trucks:[
+["truckNo","Truck Number","text",1],
+["trailerNo","Trailer Number","text"],
+["type","Equipment Type","truckType"],
+["driverName","Driver Name","text"],
+["status","Status","truckStatus"]
+],
+expenses:[
+["date","Date","date",1],
+["category","Category","expenseCategory"],
+["description","Description","text",1],
+["amount","Amount ($)","number",1]
+]
+};
+
+const selectOptions={
+status:["Available","Yard","Dispatched","Picked Up","In Transit","Delivered","Cancelled"],
+driverStatus:["Available","On Load","Off Duty","Inactive"],
+truckStatus:["Available","Dispatched","Maintenance","Inactive"],
+truckType:["53 ft Dry Van","Reefer","Flatbed","Other"],
+expenseCategory:["Fuel","Repair","Maintenance","Toll","Insurance","Office","Other"]
+};
+
+function openForm(type,id=null){
+ const old=id?db[type].find(x=>x.id===id)||{}:{};
+ editInfo={type,id};
+
+ $("modalTitle").textContent=(id?"Edit ":"Add ")+type.slice(0,-1);
+
+ $("fields").innerHTML=schemas[type].map(([key,label,kind,required])=>{
+ let value=old[key]??(kind==="date"?today():"");
+ let control="";
+
+ if(kind==="selectDrivers"||kind==="selectTrucks"){
+  let opts=kind==="selectDrivers"
+   ?db.drivers.map(d=>d.name)
+   :db.trucks.map(t=>t.truckNo);
+
+  if(value&&!opts.includes(value))opts.unshift(value);
+
+  control=`<select name="${key}">
+  <option value="">Select</option>
+  ${opts.map(v=>`<option ${v===value?"selected":""} value="${esc(v)}">${esc(v)}</option>`).join("")}
+  </select>`;
+ }
+ else if(selectOptions[kind]){
+  control=`<select name="${key}">
+  ${selectOptions[kind].map(v=>`<option ${v===value?"selected":""} value="${esc(v)}">${esc(v)}</option>`).join("")}
+  </select>`;
+ }
+ else if(kind==="textarea"){
+  control=`<textarea name="${key}">${esc(value)}</textarea>`;
+ }
+ else{
+  control=`<input name="${key}" type="${kind}" value="${esc(value)}"
+  ${required?"required":""}
+  ${kind==="number"?'min="0" step="0.01"':""}>`;
+ }
+
+ return `<div class="field ${kind==="textarea"?"full":""}">
+ <label>${label}${required?" *":""}</label>${control}</div>`;
+ }).join("");
+
+ $("modal").showModal();
+}
+
+$("xModal").onclick=$("cancelModal").onclick=()=>$("modal").close();
+
+$("recordForm").addEventListener("submit",e=>{
+ e.preventDefault();
+ if(!editInfo)return;
+
+ let {type,id}=editInfo;
+ let record=Object.fromEntries(new FormData(e.currentTarget).entries());
+
+ if(type==="loads"){
+  let d=db.drivers.find(x=>x.name===record.driverName);
+  if(d){
+   record.driverPhone=record.driverPhone||d.phone;
+   record.truckNo=record.truckNo||d.truckNo;
+  }
+  if(!id)record.trackingToken=uid();
+ }
+
+ if(id){
+  let i=db[type].findIndex(x=>x.id===id);
+  if(i>=0)db[type][i]={...db[type][i],...record};
+ }else{
+  db[type].push({id:uid(),...record});
+ }
+
+ save();
+ $("modal").close();
+ toast("Record saved successfully");
+ render();
+});
+
+/* PAGE RENDERING */
+
+function render(){
+ $("pageTitle").textContent=({
+ dashboard:"Dashboard",
+ map:"Live World Map",
+ dispatch:"Dispatch Board",
+ loads:"Loads",
+ drivers:"Drivers",
+ trucks:"Trucks",
+ accounting:"Accounting",
+ reports:"Reports",
+ admin:"Admin & Settings"
+ })[pageName];
+
+ document.querySelectorAll(".nav").forEach(b=>
+ b.classList.toggle("active",b.dataset.page===pageName));
+
+ const views={
+ dashboard:dashboard,
+ map:mapPage,
+ dispatch:dispatchPage,
+ loads:loadsPage,
+ drivers:driversPage,
+ trucks:trucksPage,
+ accounting:accountingPage,
+ reports:reportsPage,
+ admin:adminPage
+ };
+
+ $("page").innerHTML=views[pageName]();
+
+ if(pageName==="map")setTimeout(initMap,100);
+}
+
+function dashboard(){
+ let delivered=db.loads.filter(x=>x.status==="Delivered");
+ let revenue=delivered.reduce((s,x)=>s+Number(x.rate||0),0);
+ let expense=db.expenses.reduce((s,x)=>s+Number(x.amount||0),0);
+
+ return title("Good day, Saim Ali 👋",
+ "Preserver Trans LLC management workspace.",
+ addBtn("Add Load"))+
+
+ `<div class="stats">
+ ${stat("TOTAL LOADS",db.loads.length,"All recorded loads")}
+ ${stat("ACTIVE LOADS",db.loads.filter(x=>!["Delivered","Cancelled"].includes(x.status)).length,"Open operations")}
+ ${stat("DRIVERS",db.drivers.length,"Registered drivers")}
+ ${stat("TRUCKS",db.trucks.length,"Registered trucks")}
+ </div>
+
+ <div class="stats">
+ ${stat("DELIVERED LOADS",delivered.length,"Completed")}
+ ${stat("DELIVERED REVENUE",cash(revenue),"Recorded load rates")}
+ ${stat("EXPENSES",cash(expense),"Recorded expenses")}
+ ${stat("NET BALANCE",cash(revenue-expense),"Revenue minus expenses")}
+ </div>`+
+
+ panel("Recent Loads",table(
+ ["Load #","Pickup","Delivery","Driver","Status","Rate"],
+ [...db.loads].reverse().slice(0,7).map(x=>`
+ <tr>
+ <td>${esc(x.loadNo)}</td>
+ <td>${esc(x.pickup)}</td>
+ <td>${esc(x.delivery)}</td>
+ <td>${esc(x.driverName)}</td>
+ <td>${badge(x.status)}</td>
+ <td>${cash(x.rate)}</td>
+ </tr>`)
+ ));
+}
+
+function loadsPage(){
+ let a=filtered([...db.loads].reverse(),
+ ["loadNo","brokerLoadNo","company","pickup","delivery","driverName","truckNo","status"]);
+
+ return title("Loads Management","Create and manage freight loads.",addBtn("Add Load"))+
+ panel("Load Records",
+ `<div class="toolbar">${search()}</div>`+
+ table(["Load #","Broker #","Broker","Pickup","Delivery","Driver","Truck","Rate","Status","Actions"],
+ a.map(x=>`
+ <tr>
+ <td><b>${esc(x.loadNo)}</b></td>
+ <td>${esc(x.brokerLoadNo)}</td>
+ <td>${esc(x.company)}</td>
+ <td>${esc(x.pickup)}</td>
+ <td>${esc(x.delivery)}</td>
+ <td>${esc(x.driverName)}</td>
+ <td>${esc(x.truckNo)}</td>
+ <td>${cash(x.rate)}</td>
+ <td>${badge(x.status)}</td>
+ <td>
+ <button class="btn light" data-edit="loads" data-id="${x.id}">Edit</button>
+ <button class="btn primary" data-wa="${x.id}">WhatsApp</button>
+ <button class="btn danger" data-del="loads" data-id="${x.id}">Delete</button>
+ </td>
+ </tr>`)));
+}
+
+function dispatchPage(){
+ let a=filtered(db.loads.filter(x=>
+ !["Delivered","Cancelled"].includes(x.status)),
+ ["loadNo","driverName","truckNo","pickup","delivery","status"]);
+
+ return title("Dispatch Board","Active loads and driver dispatch messages.",addBtn("New Dispatch"))+
+ `<div class="notice">
+ Dispatch messages do not include freight rates.
+ A tracking link is generated for each new load.
+ GPS sharing requires the driver to open the link and allow location permission.
+ </div>`+
+ panel("Active Dispatches",
+ `<div class="toolbar">${search()}</div>`+
+ table(["Load #","Driver","Phone","Truck","Pickup","Delivery","Status","Action"],
+ a.map(x=>`
+ <tr>
+ <td>${esc(x.loadNo)}</td>
+ <td>${esc(x.driverName)}</td>
+ <td>${esc(x.driverPhone)}</td>
+ <td>${esc(x.truckNo)}</td>
+ <td>${esc(x.pickup)}</td>
+ <td>${esc(x.delivery)}</td>
+ <td>${badge(x.status)}</td>
+ <td>
+ <button class="btn primary" data-wa="${x.id}">Send WhatsApp</button>
+ <button class="btn light" data-edit="loads" data-id="${x.id}">Update</button>
+ </td>
+ </tr>`)));
+}
+
+function driversPage(){
+ let a=filtered([...db.drivers].reverse(),
+ ["name","phone","truckNo","status"]);
+
+ return title("Drivers","Driver directory and contact details.",addBtn("Add Driver"))+
+ panel("Drivers",
+ `<div class="toolbar">${search()}</div>`+
+ table(["Name","Phone","Truck","License","Status","Actions"],
+ a.map(x=>`
+ <tr>
+ <td>${esc(x.name)}</td>
+ <td>${esc(x.phone)}</td>
+ <td>${esc(x.truckNo)}</td>
+ <td>${esc(x.license)}</td>
+ <td>${badge(x.status)}</td>
+ <td>
+ <button class="btn light" data-edit="drivers" data-id="${x.id}">Edit</button>
+ <button class="btn danger" data-del="drivers" data-id="${x.id}">Delete</button>
+ </td>
+ </tr>`)));
+}
+
+function trucksPage(){
+ let a=filtered([...db.trucks].reverse(),
+ ["truckNo","trailerNo","type","driverName","status"]);
+
+ return title("Trucks","Truck, trailer and equipment records.",addBtn("Add Truck"))+
+ panel("Truck Fleet",
+ `<div class="toolbar">${search()}</div>`+
+ table(["Truck #","Trailer #","Type","Driver","Status","Actions"],
+ a.map(x=>`
+ <tr>
+ <td>${esc(x.truckNo)}</td>
+ <td>${esc(x.trailerNo)}</td>
+ <td>${esc(x.type)}</td>
+ <td>${esc(x.driverName)}</td>
+ <td>${badge(x.status)}</td>
+ <td>
+ <button class="btn light" data-edit="trucks" data-id="${x.id}">Edit</button>
+ <button class="btn danger" data-del="trucks" data-id="${x.id}">Delete</button>
+ </td>
+ </tr>`)));
+}
+
+function accountingPage(){
+ let rev=db.loads.filter(x=>x.status==="Delivered")
+ .reduce((s,x)=>s+Number(x.rate||0),0);
+ let ex=db.expenses.reduce((s,x)=>s+Number(x.amount||0),0);
+
+ return title("Accounting","Delivered revenue and business expenses.",addBtn("Add Expense"))+
+ `<div class="stats">
+ ${stat("DELIVERED REVENUE",cash(rev),"Completed loads")}
+ ${stat("EXPENSES",cash(ex),"Recorded expenses")}
+ ${stat("NET",cash(rev-ex),"Revenue minus expenses")}
+ ${stat("EXPENSE RECORDS",db.expenses.length,"Entries")}
+ </div>`+
+ panel("Expense Records",
+ table(["Date","Category","Description","Amount","Actions"],
+ [...db.expenses].reverse().map(x=>`
+ <tr>
+ <td>${esc(x.date)}</td>
+ <td>${esc(x.category)}</td>
+ <td>${esc(x.description)}</td>
+ <td>${cash(x.amount)}</td>
+ <td>
+ <button class="btn light" data-edit="expenses" data-id="${x.id}">Edit</button>
+ <button class="btn danger" data-del="expenses" data-id="${x.id}">Delete</button>
+ </td>
+ </tr>`)));
+}
+
+function reportsPage(){
+ return title("Reports","Export records for Microsoft Excel.",
+ `<button class="btn primary" data-export="loads">Export Loads CSV</button>`)+
+ panel("Export Data",
+ `<p style="font-size:12px;color:#8490a1">Download each dataset as a CSV file.</p>
+ <div class="toolbar">
+ ${["loads","drivers","trucks","expenses"].map(x=>
+ `<button class="btn light" data-export="${x}">Export ${x}</button>`).join("")}
+ </div>`);
+}
+
+function adminPage(){
+ return title("Admin & Settings","Company details and backup tools.")+
+ panel("Company Settings",
+ `<form id="settings">
+ <div class="fieldgrid">
+ <div class="field full"><label>Company Name</label>
+ <input name="company" value="${esc(db.settings.company)}"></div>
+ <div class="field"><label>Dispatcher</label>
+ <input name="dispatcher" value="${esc(db.settings.dispatcher)}"></div>
+ <div class="field"><label>Company Phone</label>
+ <input name="phone" value="${esc(db.settings.phone)}"></div>
+ </div><br><button class="btn primary">Save Settings</button>
+ </form>`)+
+ panel("Database & Backup",
+ `<div class="notice">
+ Management records in this version are stored in this browser.
+ For multi-device records, the existing Supabase tables must be connected.
+ Live GPS uses the truck_locations table.
+ </div>
+ <div class="toolbar">
+ <button class="btn light" data-backup>Download Backup</button>
+ <button class="btn light" data-restore>Restore Backup</button>
+ <button class="btn danger" data-reset>Clear Local Data</button>
+ </div>`);
+}
+
+/* WORLD MAP */
+
+function mapPage(){
+ return title("Live World Map",
+ "Latest driver GPS positions received by Supabase.",
+ `<button class="btn primary" id="refreshMap">Refresh Locations</button>`)+
+
+ `<div class="notice">
+ ${sb?"Supabase configured.":"Supabase setup required."}
+ Driver GPS appears after the driver opens the tracking link and grants location permission.
+ </div>`+
+
+ panel("Fleet GPS Map",
+ `<p class="map-note">Truck markers show the latest reported GPS coordinates.</p>
+ <div id="map"></div>
+ <p id="mapStatus" class="map-note">Waiting for map...</p>`)+
+
+ panel("Latest GPS Updates",
+ `<div id="gpsTable">${table(["Truck","Driver","Latitude","Longitude","Last Update"],[])}</div>`);
+}
+
+function initMap(){
+ if(!map){
+  map=L.map("map").setView([39,-98],4);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+   maxZoom:19,
+   attribution:"&copy; OpenStreetMap"
+  }).addTo(map);
+ }
+ setTimeout(()=>map.invalidateSize(),100);
+ loadGPS();
+}
+
+async function loadGPS(){
+ if(!map)return;
+
+ if(!sb){
+  $("mapStatus").textContent="Add Supabase URL and anon key in the code to enable GPS.";
+  return;
+ }
+
+ $("mapStatus").textContent="Loading GPS locations...";
+
+ try{
+  const {data,error}=await sb.from("truck_locations")
+   .select("*")
+   .order("updated_at",{ascending:false})
+   .limit(500);
+
+  if(error)throw error;
+
+  Object.values(mapMarkers).forEach(m=>map.removeLayer(m));
+  mapMarkers={};
+
+  const latest={};
+
+  (data||[]).forEach(p=>{
+   const key=p.tracking_token||p.truck_no||p.id;
+   if(!latest[key])latest[key]=p;
+  });
+
+  const rows=[];
+
+  Object.values(latest).forEach(p=>{
+   const lat=Number(p.lat);
+   const lng=Number(p.lng);
+
+   if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
+
+   const label=String(p.truck_no||"Truck");
+
+   const marker=L.marker([lat,lng]).addTo(map)
+   .bindPopup(`<b>${esc(label)}</b><br>${esc(p.driver_name||"Driver")}<br>${esc(p.updated_at||"")}`);
+
+   mapMarkers[label]=marker;
+
+   rows.push(`<tr>
+   <td>${esc(label)}</td>
+   <td>${esc(p.driver_name)}</td>
+   <td>${lat.toFixed(5)}</td>
+   <td>${lng.toFixed(5)}</td>
+   <td>${esc(p.updated_at)}</td>
+   </tr>`);
+  });
+
+  $("gpsTable").innerHTML=table(
+   ["Truck","Driver","Latitude","Longitude","Last Update"],rows
+  );
+
+  $("mapStatus").textContent=
+   rows.length+" truck location(s) found. Updated "+new Date().toLocaleTimeString();
+
+  if(rows.length){
+   const group=L.featureGroup(Object.values(mapMarkers));
+   map.fitBounds(group.getBounds().pad(.2));
+  }
+
+ }catch(e){
+  $("mapStatus").textContent="GPS loading error: "+e.message;
+ }
+}
+
+/* WHATSAPP DISPATCH */
+
+function sendDispatch(id){
+ const l=db.loads.find(x=>x.id===id);
+ if(!l)return;
+
+ const phone=String(l.driverPhone||"").replace(/\D/g,"");
+
+ if(phone.length<10){
+  alert("Add the driver's phone number with country code first.");
+  return;
+ }
+
+ const trackURL=location.href.split("?")[0]+
+ "?track="+encodeURIComponent(l.trackingToken||"");
+
+ const message=`PRESERVER TRANS LLC - DISPATCH
+
+Load: ${l.loadNo}
+Pickup: ${l.pickup}
+Pickup Date: ${l.pickupDate||"N/A"}
+Appointment: ${l.appointment||"N/A"}
+
+Delivery: ${l.delivery}
+Delivery Date: ${l.deliveryDate||"N/A"}
+
+Truck: ${l.truckNo||"N/A"}
+Trailer: ${l.trailerNo||"N/A"}
+
+Driver: ${l.driverName||"N/A"}
+
+Live Tracking Link:
+${trackURL}
+
+Please open the tracking link and allow location access.`;
+
+ window.open(
+ "https://wa.me/"+phone+"?text="+encodeURIComponent(message),
+ "_blank"
+ );
+}
+
+/* EXPORT */
+
+function download(name,content,type){
+ const u=URL.createObjectURL(new Blob([content],{type}));
+ const a=document.createElement("a");
+ a.href=u;
+ a.download=name;
+ a.click();
+ URL.revokeObjectURL(u);
+}
+
+function exportCSV(type){
+ const arr=db[type]||[];
+
+ if(!arr.length){
+  toast("No records to export");
+  return;
+ }
+
+ const keys=[...new Set(arr.flatMap(x=>Object.keys(x)))];
+
+ const csv=[
+ keys,
+ ...arr.map(x=>keys.map(k=>x[k]??""))
+ ].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(","))
+ .join("\r\n");
+
+ download("preserver-"+type+".csv","\ufeff"+csv,"text/csv");
+}
+
+/* BACKUP / RESTORE */
+
+function backup(){
+ download("preserver-trans-backup.json",
+ JSON.stringify(db,null,2),"application/json");
+}
+
+const restore=document.createElement("input");
+restore.type="file";
+restore.accept=".json";
+restore.hidden=true;
+document.body.appendChild(restore);
+
+restore.onchange=async()=>{
+ const f=restore.files[0];
+ if(!f)return;
+
+ try{
+  const d=JSON.parse(await f.text());
+
+  if(!Array.isArray(d.loads)||
+     !Array.isArray(d.drivers)||
+     !Array.isArray(d.trucks)||
+     !Array.isArray(d.expenses)){
+   throw Error("Invalid backup file");
+  }
+
+  if(confirm("Replace current local data with this backup?")){
+   db={...defaults,...d};
+   save();
+   render();
+   toast("Backup restored");
+  }
+ }catch(e){
+  alert(e.message);
+ }
+
+ restore.value="";
+};
+
+/* BUTTON EVENTS */
+
+$("nav").addEventListener("click",e=>{
+ const b=e.target.closest("[data-page]");
+ if(!b)return;
+
+ pageName=b.dataset.page;
+ searchText="";
+ $("sidebar").classList.remove("open");
+ render();
+});
+
+$("menuBtn").onclick=()=>$("sidebar").classList.toggle("open");
+
+$("page").addEventListener("click",e=>{
+ const b=e.target.closest("button");
+ if(!b)return;
+
+ if(b.dataset.action==="add"){
+  const type=({
+   dashboard:"loads",
+   dispatch:"loads",
+   loads:"loads",
+   drivers:"drivers",
+   trucks:"trucks",
+   accounting:"expenses"
+  })[pageName]||"loads";
+
+  openForm(type);
+  return;
+ }
+
+ if(b.dataset.edit){
+  openForm(b.dataset.edit,b.dataset.id);
+  return;
+ }
+
+ if(b.dataset.del){
+  if(confirm("Delete this record?")){
+   db[b.dataset.del]=db[b.dataset.del].filter(x=>x.id!==b.dataset.id);
+   save();
+   render();
+   toast("Record deleted");
+  }
+  return;
+ }
+
+ if(b.dataset.wa){
+  sendDispatch(b.dataset.wa);
+  return;
+ }
+
+ if(b.dataset.export){
+  exportCSV(b.dataset.export);
+  return;
+ }
+
+ if(b.hasAttribute("data-backup")){
+  backup();
+  return;
+ }
+
+ if(b.hasAttribute("data-restore")){
+  restore.click();
+  return;
+ }
+
+ if(b.hasAttribute("data-reset")){
+  if(confirm("Clear all local data?")){
+   db=JSON.parse(JSON.stringify(defaults));
+   save();
+   render();
+   toast("Local data cleared");
+  }
+  return;
+ }
+
+ if(b.id==="refreshMap")loadGPS();
+});
+
+$("page").addEventListener("input",e=>{
+ if(e.target.id==="search"){
+  searchText=e.target.value;
+  const p=e.target.selectionStart;
+  render();
+  $("search")?.focus();
+  $("search")?.setSelectionRange(p,p);
+ }
+});
+
+$("page").addEventListener("submit",e=>{
+ if(e.target.id!=="settings")return;
+
+ e.preventDefault();
+ db.settings=Object.fromEntries(new FormData(e.target));
+ save();
+ toast("Settings saved");
+});
+
+/* DRIVER LIVE GPS PAGE */
+
+async function startDriverTracking(token){
+
+ document.body.innerHTML=`
+ <main style="max-width:620px;margin:40px auto;padding:25px;font-family:Arial">
+ <h2>Preserver Trans LLC</h2>
+ <h3>Driver Live Tracking</h3>
+ <p id="trackStatus">Checking tracking connection...</p>
+ <button id="startGPS" style="padding:13px 20px;background:#d9aa45;border:0;border-radius:8px;font-weight:bold">
+ Start Location Sharing
+ </button>
+ <p style="color:#777;font-size:12px;line-height:1.7">
+ Please allow location access. Keep this page open while driving.
+ Location sharing requires internet and GPS permission.
+ </p>
+ </main>`;
+
+ const status=document.getElementById("trackStatus");
+ const btn=document.getElementById("startGPS");
+
+ if(!sb){
+  status.textContent="Tracking service is not configured. Contact dispatch.";
+  btn.disabled=true;
+  return;
+ }
+
+ btn.onclick=()=>{
+  if(!navigator.geolocation){
+   status.textContent="GPS is not supported by this browser.";
+   return;
+  }
+
+  btn.disabled=true;
+  status.textContent="Waiting for GPS permission...";
+
+  navigator.geolocation.watchPosition(async pos=>{
+
+   const point={
+    tracking_token:token,
+    lat:pos.coords.latitude,
+    lng:pos.coords.longitude,
+    updated_at:new Date().toISOString()
+   };
+
+   try{
+    const {error}=await sb.from("truck_locations")
+     .upsert(point,{onConflict:"tracking_token"});
+
+    if(error)throw error;
+
+    status.textContent=
+     "Location shared successfully. Last update: "+
+     new Date().toLocaleTimeString();
+
+   }catch(err){
+    status.textContent="Could not send location: "+err.message;
+    btn.disabled=false;
+   }
+
+  },err=>{
+   status.textContent="GPS error: "+err.message;
+   btn.disabled=false;
+  },{
+   enableHighAccuracy:true,
+   maximumAge:5000,
+   timeout:20000
+  });
+ };
+}
+
+/* START SOFTWARE */
+
+const trackingToken=new URLSearchParams(location.search).get("track");
+
+if(trackingToken){
+ startDriverTracking(trackingToken);
+}else{
+ save();
+ render();
+
+ if(sb){
+  setInterval(()=>{
+   if(pageName==="map")loadGPS();
+  },30000);
+ }
+}
+</script>
 </body>
 </html>
