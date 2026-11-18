@@ -669,18 +669,20 @@ function initMap(){
  loadGPS();
 }
 
+
 async function loadGPS(){
  if(!map)return;
 
  if(!sb){
-  $("mapStatus").textContent="Add Supabase URL and anon key in the code to enable GPS.";
+  $("mapStatus").textContent="Supabase connection required.";
   return;
  }
 
- $("mapStatus").textContent="Loading GPS locations...";
+ $("mapStatus").textContent="Loading live truck locations...";
 
  try{
-  const {data,error}=await sb.from("truck_locations")
+  const {data,error}=await sb
+   .from("truck_locations")
    .select("*")
    .order("updated_at",{ascending:false})
    .limit(500);
@@ -693,7 +695,7 @@ async function loadGPS(){
   const latest={};
 
   (data||[]).forEach(p=>{
-   const key=p.tracking_token||p.truck_no||p.id;
+   const key=p.tracking_token||p.id;
    if(!latest[key])latest[key]=p;
   });
 
@@ -705,28 +707,48 @@ async function loadGPS(){
 
    if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
 
-   const label=String(p.truck_no||"Truck");
+   // Find matching load using tracking token
+   const load=(db.loads||[]).find(
+    x=>x.trackingToken===p.tracking_token
+   );
 
-   const marker=L.marker([lat,lng]).addTo(map)
-   .bindPopup(`<b>${esc(label)}</b><br>${esc(p.driver_name||"Driver")}<br>${esc(p.updated_at||"")}`);
+   const truckNo=p.truck_no||load?.truckNo||"Unknown Truck";
+   const driverName=p.driver_name||load?.driverName||"Unknown Driver";
+   const updated=p.updated_at
+    ?new Date(p.updated_at).toLocaleString()
+    :"Unknown";
 
-   mapMarkers[label]=marker;
+   const marker=L.marker([lat,lng]).addTo(map);
+
+   marker.bindPopup(`
+    <div>
+     <b>Truck: ${esc(truckNo)}</b><br>
+     Driver: ${esc(driverName)}<br>
+     Load: ${esc(load?.loadNo||"N/A")}<br>
+     Last Update: ${esc(updated)}
+    </div>
+   `);
+
+   mapMarkers[p.tracking_token||truckNo]=marker;
 
    rows.push(`<tr>
-   <td>${esc(label)}</td>
-   <td>${esc(p.driver_name)}</td>
-   <td>${lat.toFixed(5)}</td>
-   <td>${lng.toFixed(5)}</td>
-   <td>${esc(p.updated_at)}</td>
+    <td>${esc(truckNo)}</td>
+    <td>${esc(driverName)}</td>
+    <td>${esc(load?.loadNo||"N/A")}</td>
+    <td>${lat.toFixed(5)}</td>
+    <td>${lng.toFixed(5)}</td>
+    <td>${esc(updated)}</td>
    </tr>`);
   });
 
   $("gpsTable").innerHTML=table(
-   ["Truck","Driver","Latitude","Longitude","Last Update"],rows
+   ["Truck","Driver","Load","Latitude","Longitude","Last Update"],
+   rows
   );
 
   $("mapStatus").textContent=
-   rows.length+" truck location(s) found. Updated "+new Date().toLocaleTimeString();
+   rows.length+" truck location(s) found. Updated "+
+   new Date().toLocaleTimeString();
 
   if(rows.length){
    const group=L.featureGroup(Object.values(mapMarkers));
@@ -738,46 +760,54 @@ async function loadGPS(){
  }
 }
 
-/* WHATSAPP DISPATCH */
+    // Generate a unique tracking token if one does not exist
+    if (!l.trackingToken) {
+        l.trackingToken = (
+            typeof crypto !== "undefined" &&
+            typeof crypto.randomUUID === "function"
+        )
+            ? crypto.randomUUID()
+            : "PT-" + Date.now() + "-" +
+              Math.random().toString(36).substring(2, 10);
 
-function sendDispatch(id){
- const l=db.loads.find(x=>x.id===id);
- if(!l)return;
+        save();
+    }
 
- const phone=String(l.driverPhone||"").replace(/\D/g,"");
+    // Generate tracking URL
+    const trackingURL = new URL(window.location.href);
+    trackingURL.search = "";
+    trackingURL.searchParams.set("track", l.trackingToken);
 
- if(phone.length<10){
-  alert("Add the driver's phone number with country code first.");
-  return;
- }
+    // Prepare WhatsApp dispatch message
+    const message = `PRESERVER TRANS LLC - DISPATCH
 
- const trackURL=location.href.split("?")[0]+
- "?track="+encodeURIComponent(l.trackingToken||"");
+Load Number: ${l.loadNo || "N/A"}
 
- const message=`PRESERVER TRANS LLC - DISPATCH
+Driver: ${l.driverName || "N/A"}
+Truck: ${l.truckNo || "N/A"}
+Trailer: ${l.trailerNo || "N/A"}
 
-Load: ${l.loadNo}
-Pickup: ${l.pickup}
-Pickup Date: ${l.pickupDate||"N/A"}
-Appointment: ${l.appointment||"N/A"}
+Pickup: ${l.pickup || "N/A"}
+Pickup Date: ${l.pickupDate || "N/A"}
+Appointment: ${l.appointment || "N/A"}
 
-Delivery: ${l.delivery}
-Delivery Date: ${l.deliveryDate||"N/A"}
+Delivery: ${l.delivery || "N/A"}
+Delivery Date: ${l.deliveryDate || "N/A"}
 
-Truck: ${l.truckNo||"N/A"}
-Trailer: ${l.trailerNo||"N/A"}
+LIVE GPS TRACKING:
+${trackingURL.toString()}
 
-Driver: ${l.driverName||"N/A"}
+Please open the tracking link and allow location access.
 
-Live Tracking Link:
-${trackURL}
+Thank you.
+PRESERVER TRANS LLC`;
 
-Please open the tracking link and allow location access.`;
+    // Open WhatsApp
+    const whatsappURL =
+        "https://wa.me/" + phone +
+        "?text=" + encodeURIComponent(message);
 
- window.open(
- "https://wa.me/"+phone+"?text="+encodeURIComponent(message),
- "_blank"
- );
+    window.open(whatsappURL, "_blank");
 }
 
 /* EXPORT */
@@ -1036,6 +1066,83 @@ if(trackingToken){
   },30000);
  }
 }
+   
+/* PRESERVER TRANS LLC
+   AUTOMATIC DISPATCH + WHATSAPP TRACKING
+*/
+
+function sendDispatchWhatsApp(data) {
+    const {
+        driverName,
+        driverPhone,
+        truckNo,
+        loadNumber,
+        pickup,
+        delivery
+    } = data;
+
+    if (!driverPhone || !truckNo || !driverName) {
+        alert("Driver name, phone and truck number are required.");
+        return;
+    }
+
+    // Generate unique tracking token
+    const token = crypto.randomUUID();
+
+    // Generate tracking link
+    const trackingURL = new URL(window.location.href);
+    trackingURL.search = "";
+    trackingURL.searchParams.set("track", token);
+
+    // Save tracking details locally
+    const trackingData = {
+        token,
+        driverName,
+        truckNo,
+        loadNumber,
+        pickup,
+        delivery,
+        createdAt: new Date().toISOString()
+    };
+
+    const saved = JSON.parse(
+        localStorage.getItem("preserver_tracking_links") || "[]"
+    );
+
+    saved.push(trackingData);
+
+    localStorage.setItem(
+        "preserver_tracking_links",
+        JSON.stringify(saved)
+    );
+
+    // WhatsApp dispatch message
+    const message = `
+PRESERVER TRANS LLC - DISPATCH
+
+Driver: ${driverName}
+Truck: ${truckNo}
+Load Number: ${loadNumber}
+
+Pickup: ${pickup}
+Delivery: ${delivery}
+
+LIVE GPS TRACKING:
+${trackingURL.toString()}
+
+Please open the link and allow location access.
+Thank you.
+    `.trim();
+
+    const phone = driverPhone.replace(/\D/g, "");
+
+    const whatsappURL =
+        "https://wa.me/" + phone +
+        "?text=" + encodeURIComponent(message);
+
+    window.open(whatsappURL, "_blank");
+}
+
 </script>
 </body>
 </html>
